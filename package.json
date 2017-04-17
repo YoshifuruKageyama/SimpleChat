@@ -1,0 +1,15 @@
+{
+  "name": "iotest",
+  "version": "1.0.0",
+  "description": "test app",
+  "main": "sey_hallo.node.js",
+  "scripts": {
+    "start": "node sey_hallo.node.js"
+  },
+  "author": "kagey",
+  "license": "ISC",
+  "dependencies": {
+    "socket.io": "^1.7.3",
+    "validator": "*"
+  }
+}
