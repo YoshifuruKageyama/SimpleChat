@@ -1,15 +1,15 @@
 {
-  "name": "iotest",
+  "name": "SimpleChat",
   "version": "1.0.0",
-  "description": "test app",
-  "main": "sey_hallo.node.js",
+  "description": "simple chat app",
+  "main": "chat.js",
   "scripts": {
-    "start": "node sey_hallo.node.js"
+    "start": "node chat.js"
   },
   "author": "kagey",
   "license": "ISC",
   "dependencies": {
-    "socket.io": "^1.7.3",
+    "socket.io": "1.7.3",
     "validator": "*"
   }
 }

@@ -1,15 +1,19 @@
 ﻿<!DOCTYPE html>
 <html>
 <head>
-    <title>meny</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <title>chat</title>
+    <script src="https://code.jquery.com/jquery-3.2.1.js"
+            integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE="
+            crossorigin="anonymous"></script>
+    <style rel="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"></style>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.js"></script>
     <script>
         var index = 0;
         var main_clint;
-        var sub_clints = [];;
+        var sub_clints = [];
         function createCliant() {
-            var socket = io.connect('ws://192.168.33.10:8001/');
+            var socket = io.connect();
             index++;
             sub_clints[index] = { socket: socket, index: index };
             console.log("create cli " + sub_clints[index].index);
@@ -30,41 +34,86 @@
 
 
         function createCliants(num) {
-            for (var i = 0; num > i; i++){
+            for (var i = 0; num > i; i++) {
                 createCliant();
             }
         }
 
         $(function () {
-            $("button#submit").click(function () {
+            $("a button#submit").click(function () {
                 var send_message = $("input#send").val();
                 if (!(send_message == null || send_message == "")) {
                     main_clint.emit("say_all", { message: send_message });
                 }
                 $("input#send").val("");
             });
-            $("button#create").click(function () {
+            $("a button#create").click(function () {
                 createCliant();
             });
-            $("button#disconnect").click(function () {
+            $("a button#disconnect").click(function () {
                 closeCliant(100);
             });
-            $("button#get_user_list").click(function () {
+            $("a button#get_user_list").click(function () {
                 main_clint.emit("user_list", { message: null });
             });
-            main_clint = createCliant();
+            main_clint = createAdminClient();
+            createCliants(5);
         });
 
+
+        function createAdminClient() {
+            var socket;
+            $(function () {
+                socket = io.connect();
+                $("div#admin button#auth").click(function () {
+                    var send_message = $("input#auth_key").val();
+                    if (!(send_message == null || send_message == "")) {
+                        socket.emit("authentication", { auth_key: send_message });
+                    }
+                });
+                socket.on("authentication_complete", function (data) {
+                    console.log(data.message);
+                    $("div#admin span.init_show").hide();
+                    $("div#admin span.init_hidden").show();
+                });
+
+                socket.on("greeting", function (data, fn) {
+                    console.log(fn, data.time_stamp, +new Date());
+                });
+                socket.on("user_list", function (data, fn) {
+                    $("div#admin select#user_list").empty();
+                    data = JSON.parse(data);
+                    data.forEach(function (user) {
+                        if (user == socket.id) {
+                        } else {
+                            $("div#admin select#user_list").append("<option>" + user + "</option>");
+                        }                   
+                    });
+                });
+
+                $("div#admin button#get_user_list").click(function () {
+                    socket.emit("user_list", { message: null });
+                });
+            });
+            return socket;
+        }
     </script>
 </head>
 <body>
     <div id="admin">
-        <strong>アドミンクライアント</strong>
-        <input type="text" id="send"><button id="submit">しゃべる</button>
-        <button id="create">接続</button>
-        <button id="disconnect">切断</button>
-        <button id="get_user_list">ユーザ一覧取得</button>
-        <textarea></textarea>
+        <strong>アドミンクライアント</strong><br>
+        <span class="init_show">
+            key<input type="text" id="auth_key"><button id="auth">認証</button>
+        </span>
+        <span class="init_hidden" style="display: none;">
+            <input type="text" id="send"><button id="submit">しゃべる</button>
+            <button id="create">接続</button>
+            <button id="disconnect">切断</button>
+            <button id="get_user_list">ユーザ一覧取得</button>
+            <select id="user_list" size="10">
+                
+            </select>
+        </span>
     </div>
 </body>
 </html>
