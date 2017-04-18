@@ -17,12 +17,17 @@
             index++;
             sub_clints[index] = { socket: socket, index: index };
             console.log("create cli " + sub_clints[index].index);
-            socket.on("greeting", function (data, fn) {
-                console.log(fn, data.time_stamp, +new Date());
+            socket.on("greeting", function (data) {
+                console.log(data);
             });
             socket.on("user_list", function (data, fn) {
                 console.log(data);
             });
+
+            socket.on("error", function (data) {
+                console.log(data);
+            });
+
             return socket;
         }
 
@@ -63,6 +68,7 @@
 
         function createAdminClient() {
             var socket;
+
             $(function () {
                 socket = io.connect();
                 $("div#admin button#auth").click(function () {
@@ -71,8 +77,16 @@
                         socket.emit("authentication", { auth_key: send_message });
                     }
                 });
+
+                $("div#admin button#submit").click(function () {
+                    var send_message = $("input#send").val();
+                    if (!(send_message == null || send_message == "")) {
+                        socket.emit("say_all", { message: send_message });
+                    }
+                    $("input#send").val("");
+                });
+
                 socket.on("authentication_complete", function (data) {
-                    console.log(data.message);
                     $("div#admin span.init_show").hide();
                     $("div#admin span.init_hidden").show();
                 });
@@ -80,19 +94,41 @@
                 socket.on("greeting", function (data, fn) {
                     console.log(fn, data.time_stamp, +new Date());
                 });
+
                 socket.on("user_list", function (data, fn) {
                     $("div#admin select#user_list").empty();
                     data = JSON.parse(data);
                     data.forEach(function (user) {
                         if (user == socket.id) {
                         } else {
-                            $("div#admin select#user_list").append("<option>" + user + "</option>");
+                            $("div#admin select#user_list").append("<option value=\""+ user +"\">" + user + "</option>");
                         }                   
                     });
                 });
 
                 $("div#admin button#get_user_list").click(function () {
                     socket.emit("user_list", { message: null });
+                });
+
+                $("div#admin button#send_to").click(function () {
+                    var send_user = $("select#user_list").val();
+                    var send_message = $("input#send").val();
+                    console.log({ send_to: send_user, message: send_message });
+                    if (!(send_user == null || send_user == "" || send_message == null || send_message == "")) {
+                        socket.emit("say_user", { send_to: send_user, message: send_message  });
+                    }
+                });
+
+                $("div#admin button#kick_to").click(function () {
+                    var send_user = $("select#user_list").val();
+                    if (!(send_user == null || send_user == "")) {
+                        socket.emit("kick", { send_to: send_user});
+                    }
+                });
+
+                socket.on("error", function (data) {
+                    sockte.close();
+                    console.log(data);
                 });
             });
             return socket;
@@ -110,9 +146,9 @@
             <button id="create">接続</button>
             <button id="disconnect">切断</button>
             <button id="get_user_list">ユーザ一覧取得</button>
-            <select id="user_list" size="10">
-                
-            </select>
+            <select id="user_list" size="10"></select>
+            <button id="kick_to">指定ユーザを切断</button>
+            <button id="send_to">指定ユーザに発言</button>
         </span>
     </div>
 </body>

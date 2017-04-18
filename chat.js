@@ -43,6 +43,7 @@ io.sockets.on('connection', function (socket) {
     console.log("End" + new Date());
   });
 
+  /*
   socket.on('say_room', function (msg) {
     var send_message = validator.escape(msg.message);
     io.emit('greeting', {
@@ -51,10 +52,12 @@ io.sockets.on('connection', function (socket) {
       send_from: socket.id
     });
   });
+  */
 
   socket.on('say_user', function (msg) {
     var send_message = validator.escape(msg.message);
-    io.emit('greeting', {
+    console.log(msg);
+    io.to(msg.send_to).emit('greeting', {
       message: send_message,
       time_stamp: +new Date(),
       send_from: socket.id
@@ -81,8 +84,10 @@ io.sockets.on('connection', function (socket) {
   /* msg:{id: client_id} */
   socket.on('kick', function (msg) {
     if (isAdmin(socket.id)) {
-      io.broadcast.to(msg.id).emit('kick', { disconnect: 'me' });
-      console.log(msg.id + 'kick');
+      console.log(msg.send_to);
+      console.log(io.sockets.sockets[msg.send_to]);
+      io.sockets.sockets[socket.id].disconnect();
+      io.to(msg.send_to).emit('kick', { disconnect: 'me' });
     }
   });
 
@@ -97,6 +102,8 @@ io.sockets.on('connection', function (socket) {
     io.broadcast.to(sockte.id).emit();
     console.log("error:" + Object.keys(io.sockets.sockets).length);
   });
+
+
   /* msg:{auth_key: admin_key} */
   socket.on('authentication', function (msg) {
     if (msg.auth_key == auth_key && admin_socket_id == null) {
